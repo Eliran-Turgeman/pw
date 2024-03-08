@@ -1,6 +1,6 @@
 use super::storage_trait::Storage;
 use serde::{Deserialize, Serialize};
-use serde_json;
+
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, Read};
