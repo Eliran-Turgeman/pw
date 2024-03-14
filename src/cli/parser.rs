@@ -3,7 +3,7 @@ use crate::storage::storage_trait::Storage;
 use crate::storage::file_storage::FileStorage;
 use crate::risk_analyzer::hibp_risk_analyzer::HIBPRiskAnalyzer;
 use crate::risk_analyzer::risk_analyzer_trait::RiskAnalyzer;
-
+use crate::password_generator::password_generator::generate_strong_password;
 
 #[derive(Parser, Debug)]
 #[command(author = "Eliran Turgeman", version = "1.0.0", about = "Simple password-store CLI", long_about = None)]
@@ -28,6 +28,13 @@ enum Commands {
     Analyze {
         #[arg(short, long)]
         key: Option<String>
+    },
+    Generate {
+        #[arg(short, long)]
+        key: Option<String>,
+
+        #[arg(short, long, default_value_t = 12)]
+        length: usize
     }
 }
 
@@ -74,6 +81,21 @@ pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         println!("No passwords to scan.");
                     }
                 },
+            }
+        },
+        Commands::Generate { key , length} => {
+            match key {
+                Some(value) => {
+                    let password = generate_strong_password(length);
+                    match storage.set(value.clone(), password.clone()) {
+                        Ok(()) => println!("Password generated: {}, and saved under key '{}'", password, value),
+                        Err(e) => eprintln!("Failed to set key: {}", e),
+                    }
+                },
+                None => {
+                    let password = generate_strong_password(length);
+                    println!("Password generated: {}", password);
+                }
             }
         }
     }
