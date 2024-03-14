@@ -23,7 +23,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: main
           release_name: Release ${{ github.sha }}
           draft: false
           prerelease: false
