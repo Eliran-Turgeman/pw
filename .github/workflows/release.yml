@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Rust
@@ -15,27 +18,32 @@ jobs:
         with:
           toolchain: stable
           override: true
+          target: ${{ matrix.target }}
       - name: Build Release
-        run: cargo build --release
-      - name: Generate unique tag name
-        id: tag_name
-        run: echo "::set-output name=tag::$(date +'%Y%m%d%H%M%S')-$(echo ${{ github.sha }} | cut -c1-8)"
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+          mv target/${{ matrix.target }}/release/pw target/${{ matrix.target }}/release/pw-${{ matrix.os }}
+      - name: Create Tag
+        run: |
+          TAG_NAME=$(date +'%Y%m%d%H%M%S')-$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          tag_name: ${{ steps.tag_name.outputs.tag }}
-          release_name: Release ${{ github.sha }}
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
+        if: success()
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/release/pw
+          asset_path: ./target/${{ matrix.target }}/release/pw-${{ matrix.os }}
           asset_name: pw
           asset_content_type: application/octet-stream
