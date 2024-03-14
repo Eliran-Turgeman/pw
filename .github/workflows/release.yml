@@ -1,4 +1,4 @@
-name: Release
+name: Build and Release
 
 on:
   push:
@@ -7,23 +7,26 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          - x86_64-apple-darwin
-          - x86_64-pc-windows-gnu
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
     steps:
       - uses: actions/checkout@v2
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          override: true
           target: ${{ matrix.target }}
-          components: rustfmt, clippy
-      - name: Build Release
+          override: true
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
         run: cargo build --release --target ${{ matrix.target }}
       - name: Rename binary for Windows
         if: matrix.target == 'x86_64-pc-windows-gnu'
