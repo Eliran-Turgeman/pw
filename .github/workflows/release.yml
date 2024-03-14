@@ -34,5 +34,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./target/release/pw
-          asset_name: pw-${{ github.run_number }}
+          asset_name: pw
           asset_content_type: application/octet-stream
