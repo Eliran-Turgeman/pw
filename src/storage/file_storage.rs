@@ -104,4 +104,25 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn test_get_all() -> io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("store.json");
+        let storage = super::FileStorage::new(file_path.to_str().unwrap());
+
+        storage.set("k1".to_string(), "v1".to_string())?;
+        storage.set("k2".to_string(), "v2".to_string())?;
+        storage.set("k3".to_string(), "v3".to_string())?;
+
+        let mut values = storage.get_all()?.unwrap_or_default();
+        values.sort();
+
+        let mut expected = vec!["v1".to_string(), "v2".to_string(), "v3".to_string()];
+        expected.sort();
+
+        assert_eq!(values, expected);
+
+        Ok(())
+    }
+
 }
