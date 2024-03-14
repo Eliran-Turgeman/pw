@@ -17,13 +17,16 @@ jobs:
           override: true
       - name: Build Release
         run: cargo build --release
+      - name: Generate unique tag name
+        id: tag_name
+        run: echo "::set-output name=tag::$(date +'%Y%m%d%H%M%S')-$(echo ${{ github.sha }} | cut -c1-8)"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          tag_name: main
+          tag_name: ${{ steps.tag_name.outputs.tag }}
           release_name: Release ${{ github.sha }}
           draft: false
           prerelease: false
