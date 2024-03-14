@@ -27,7 +27,6 @@ jobs:
           override: true
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-        run: cargo build --release --target ${{ matrix.target }}
       - name: Rename binary for Windows
         if: matrix.target == 'x86_64-pc-windows-gnu'
         run: mv target/${{ matrix.target }}/release/pw target/${{ matrix.target }}/release/pw.exe
