@@ -47,6 +47,16 @@ impl Storage for FileStorage {
         let map = self.read_storage()?;
         Ok(map.get(&key).cloned())
     }
+
+    fn get_all(&self) -> io::Result<Option<Vec<String>>> {
+        let map = self.read_storage()?;
+        if map.is_empty() {
+            Ok(None)
+        } else {
+            let values = map.values().cloned().collect::<Vec<String>>();
+            Ok(Some(values))
+        }
+    }
 }
 
 

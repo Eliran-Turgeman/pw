@@ -1,6 +1,7 @@
 mod cli;
 mod storage;
+mod risk_analyzer;
 
 fn main() {
-    cli::parser::main();
+    let _ = cli::parser::main();
 }
