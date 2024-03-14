@@ -1,6 +1,6 @@
 # pw
 
-`pw` is a command-line tool designed for secure password management. Utilizing modern cryptography, `pw` ensures the secure storage of passwords and offers functionalities for generating strong passwords, retrieving stored passwords, and checking if your passwords have been compromised in known data breaches.
+`pw` is a command-line tool designed for secure password management. `pw` ensures the secure storage of passwords and offers functionalities for generating strong passwords, retrieving stored passwords, and checking if your passwords have been compromised in known data breaches.
 
 ## Features
 
