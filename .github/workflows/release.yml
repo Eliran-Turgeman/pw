@@ -83,7 +83,7 @@ jobs:
           cd target/${{ matrix.job.target }}/release
 
           ####### reduce binary size by removing debug symbols #######
-          BINARY_NAME=rust-gh-example${{ matrix.job.binary-postfix }}
+          BINARY_NAME=pw${{ matrix.job.binary-postfix }}
           if [[ ${{ matrix.job.target }} == aarch64-unknown-linux-gnu ]]; then
             GCC_PREFIX="aarch64-linux-gnu-"
           else
@@ -92,7 +92,7 @@ jobs:
           "$GCC_PREFIX"strip $BINARY_NAME
 
           ########## create tar.gz ##########
-          RELEASE_NAME=rust-gh-example-${GITHUB_REF/refs\/tags\//}-${{ matrix.job.os-name }}-${{ matrix.job.architecture }}
+          RELEASE_NAME=pw-${GITHUB_REF/refs\/tags\//}-${{ matrix.job.os-name }}-${{ matrix.job.architecture }}
           tar czvf $RELEASE_NAME.tar.gz $BINARY_NAME
 
           ########## create sha256 ##########
@@ -105,7 +105,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.job.target }}/release/rust-gh-example-*.tar.gz
-            target/${{ matrix.job.target }}/release/rust-gh-example-*.sha256
+            target/${{ matrix.job.target }}/release/pw-*.tar.gz
+            target/${{ matrix.job.target }}/release/pw-*.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
