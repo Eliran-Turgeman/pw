@@ -75,10 +75,10 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
       - name: Windows - zip artifact
         if: matrix.os == 'windows-latest'
-        run: tar.exe -a -c -f pw.zip dist\\pw.exe
+        run: tar.exe -a -c -f pw.zip target/release/pw.exe
       - name: Linux/Mac - zip artifact
         if: matrix.os != 'windows-latest'
-        run: zip pw.zip dist/pw
+        run: zip pw.zip dtarget/release/pw
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
