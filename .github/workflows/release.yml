@@ -1,22 +1,64 @@
-name: Build and Release
+name: Release
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  github-release:
+    runs-on: [public, linux, x64]
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare Release
+        id: prepare_release
+        run: |
+          # grab latest release and tag to compare and decide to create a new one
+          create_release=true
+          latest_gh_release=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest"  | grep -Po '"tag_name": "\K.*?(?=")')
+          latest_tag=$(git describe --abbrev=0 --tags)
+
+          if [ "$latest_gh_release" = "$latest_tag" ]
+          then
+            create_release=false
+          fi
+
+          echo "create_release=$create_release" >> "$GITHUB_OUTPUT"
+          echo "latest_release_version=$latest_gh_release" >> "$GITHUB_OUTPUT"
+          echo "version=$latest_tag" >> "$GITHUB_OUTPUT"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        id: create_github_release
+        with:
+          tag_name: ${{ steps.prepare_release.outputs.version }}
+          name: ${{ steps.prepare_release.outputs.version }}
+    outputs:
+      upload_url: ${{ steps.create_github_release.outputs.upload_url }}
+      version: ${{ steps.prepare_release.outputs.version }}
+  build-release-artifacts:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
           - os: macos-latest
-            target: x86_64-apple-darwin
+            name: darwin
+            suffix: ''
+          - os: ubuntu-latest
+            name: linux
+            suffix: ''
+          - os: windows-latest
+            name: windows
+            suffix: '.exe'
+    needs: [github-release]
+    if: needs.github-release.outputs.upload_url != ''
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v2
       - name: Set up Rust
@@ -27,28 +69,18 @@ jobs:
           override: true
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-      - name: Rename binary for Windows
-        if: matrix.target == 'x86_64-pc-windows-gnu'
-        run: mv target/${{ matrix.target }}/release/pw target/${{ matrix.target }}/release/pw.exe
-      - name: Create Unique Tag
-        id: unique_tag
-        run: echo "::set-output name=tag::$(date +'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA)"
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.unique_tag.outputs.tag }}
-          release_name: Release ${{ github.sha }}
-          draft: false
-          prerelease: false
+      - name: Windows - zip artifact
+        if: matrix.os == 'windows-latest'
+        run: tar.exe -a -c -f pw.zip dist\\pw.exe
+      - name: Linux/Mac - zip artifact
+        if: matrix.os != 'windows-latest'
+        run: zip pw.zip dist/pw
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/${{ matrix.target }}/release/pw${{ if eq(matrix.target, 'x86_64-pc-windows-gnu') }}.exe${{ endif }}
-          asset_name: pw-${{ matrix.target }}${{ if eq(matrix.target, 'x86_64-pc-windows-gnu') }}.exe${{ endif }}
-          asset_content_type: application/octet-stream
+          upload_url: ${{ needs.github-release.outputs.upload_url }}
+          asset_path: pw.zip
+          asset_name: pw_${{ matrix.name }}_X86_64_${{ needs.github-release.outputs.version }}.zip
+          asset_content_type: application/zip
