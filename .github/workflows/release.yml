@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   github-release:
-    runs-on: [ubuntu-latest, windows-latest]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -47,12 +47,15 @@ jobs:
           - os: macos-latest
             name: darwin
             suffix: ''
+            target: x86_64-apple-darwin
           - os: ubuntu-latest
             name: linux
             suffix: ''
+            target: x86_64-unknown-linux-gnu
           - os: windows-latest
             name: windows
             suffix: '.exe'
+            target: x86_64-pc-windows-msvc
     needs: [github-release]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
