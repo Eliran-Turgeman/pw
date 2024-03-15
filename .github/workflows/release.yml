@@ -46,14 +46,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            name: darwin
-            suffix: ''
-            target: x86_64-apple-darwin
-          - os: ubuntu-latest
-            name: linux
-            suffix: ''
-            target: x86_64-unknown-linux-gnu
+          # - os: macos-latest
+          #   name: darwin
+          #   suffix: ''
+          #   target: x86_64-apple-darwin
+          # - os: ubuntu-latest
+          #   name: linux
+          #   suffix: ''
+          #   target: x86_64-unknown-linux-gnu
           - os: windows-latest
             name: windows
             suffix: '.exe'
@@ -73,9 +73,6 @@ jobs:
           override: true
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-      - name: List build artifacts
-        run: ls target/release/
-
       - name: Windows - zip artifact
         if: matrix.os == 'windows-latest'
         run: tar.exe -a -c -f pw.zip target/release/pw.exe
