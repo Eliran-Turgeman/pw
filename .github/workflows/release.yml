@@ -75,7 +75,7 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
       - name: Windows - zip artifact
         if: matrix.os == 'windows-latest'
-        run: tar.exe -a -c -f pw.zip target/release/pw.exe
+        run: Compress-Archive -Path target/release/pw.exe -DestinationPath pw.zip
       - name: Linux/Mac - zip artifact
         if: matrix.os != 'windows-latest'
         run: zip pw.zip target/release/pw
