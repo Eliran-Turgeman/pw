@@ -73,6 +73,9 @@ jobs:
           override: true
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
+      - name: List build artifacts
+        run: ls target/release/
+
       - name: Windows - zip artifact
         if: matrix.os == 'windows-latest'
         run: tar.exe -a -c -f pw.zip target/release/pw.exe
