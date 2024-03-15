@@ -24,7 +24,7 @@ impl FileStorage {
                 file.read_to_string(&mut contents)?;
                 let map: HashMap<String, String> = serde_json::from_str(&contents)?;
                 Ok(map)
-            },
+            }
             Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(HashMap::new()),
             Err(e) => Err(e),
         }
@@ -59,12 +59,11 @@ impl Storage for FileStorage {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
+    use crate::storage::storage_trait::Storage;
     use std::io;
     use tempfile::tempdir;
-    use crate::storage::storage_trait::Storage;
 
     #[test]
     fn test_set_and_get() -> io::Result<()> {
@@ -99,7 +98,10 @@ mod tests {
         drop(storage);
 
         let new_storage = super::FileStorage::new(file_path.to_str().unwrap());
-        assert_eq!(new_storage.get("persisted_key".to_string())?, Some("persisted_value".to_string()));
+        assert_eq!(
+            new_storage.get("persisted_key".to_string())?,
+            Some("persisted_value".to_string())
+        );
 
         Ok(())
     }
@@ -124,5 +126,4 @@ mod tests {
 
         Ok(())
     }
-
 }

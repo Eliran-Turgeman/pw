@@ -1,9 +1,9 @@
-use clap::{Parser, Subcommand};
-use crate::storage::storage_trait::Storage; 
-use crate::storage::file_storage::FileStorage;
+use crate::password_generator::generator::generate_strong_password;
 use crate::risk_analyzer::hibp_risk_analyzer::HIBPRiskAnalyzer;
 use crate::risk_analyzer::risk_analyzer_trait::RiskAnalyzer;
-use crate::password_generator::password_generator::generate_strong_password;
+use crate::storage::file_storage::FileStorage;
+use crate::storage::storage_trait::Storage;
+use clap::{Parser, Subcommand};
 
 /// Simple Password-Store CLI
 ///
@@ -14,7 +14,7 @@ use crate::password_generator::password_generator::generate_strong_password;
 #[command(author = "Eliran Turgeman", version = "1.0.0", about = "A simple CLI for managing passwords.", long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands
+    command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
@@ -24,11 +24,15 @@ enum Commands {
     /// This command allows you to securely store a new password under a specified key.
     /// If the key already exists, its password will be overwritten.
     Set {
-        #[arg(short, long, help = "The unique key under which to store the password.")]
+        #[arg(
+            short,
+            long,
+            help = "The unique key under which to store the password."
+        )]
         key: String,
 
         #[arg(short, long, help = "The password to store.")]
-        value: String
+        value: String,
     },
 
     /// Retrieves a password by key.
@@ -37,7 +41,7 @@ enum Commands {
     /// If the key does not exist, an error message will be shown.
     Get {
         #[arg(short, long, help = "The key for which to retrieve the password.")]
-        key: String
+        key: String,
     },
 
     /// Analyzes passwords for potential compromises.
@@ -46,8 +50,12 @@ enum Commands {
     /// if no key is provided, have been compromised in known data breaches. It uses the
     /// "Have I Been Pwned" API to perform the analysis.
     Analyze {
-        #[arg(short, long, help = "The key of the password to analyze. If omitted, all passwords are analyzed.")]
-        key: Option<String>
+        #[arg(
+            short,
+            long,
+            help = "The key of the password to analyze. If omitted, all passwords are analyzed."
+        )]
+        key: Option<String>,
     },
 
     /// Generates a strong, random password.
@@ -55,14 +63,22 @@ enum Commands {
     /// This command generates a strong password of a specified length. The generated password
     /// is displayed but not stored. Use the 'set' command to store it if desired.
     Generate {
-        #[arg(short, long, help = "Optionally specify a key to directly store the generated password.")]
+        #[arg(
+            short,
+            long,
+            help = "Optionally specify a key to directly store the generated password."
+        )]
         key: Option<String>,
 
-        #[arg(short, long, default_value_t = 12, help = "The length of the password to generate. Defaults to 12 characters.")]
-        length: usize
-    }
+        #[arg(
+            short,
+            long,
+            default_value_t = 12,
+            help = "The length of the password to generate. Defaults to 12 characters."
+        )]
+        length: usize,
+    },
 }
-
 
 #[tokio::main]
 pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -79,51 +95,50 @@ pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(None) => println!("Key not found"),
             Err(e) => eprintln!("Failed to get key: {}", e),
         },
-        Commands::Analyze { key } => {
-            match key {
-                Some(value) => {
-                    let password_result = storage.get(value.clone());
-                    match password_result {
-                        Ok(Some(password)) => {
-                            let analyzer = HIBPRiskAnalyzer{};
-                            let compromised = analyzer.check_password(&password).await?;
-                            if compromised{
-                                println!("Password for {} is compromised!", value);
-                            } else {
-                                println!("Password for {} is safe.", value);
-                            }
-                        },
-                        Ok(None) => println!("Key not found."),
-                        Err(e) => eprintln!("Failed to get key: {}", e),
+        Commands::Analyze { key } => match key {
+            Some(value) => {
+                let password_result = storage.get(value.clone());
+                match password_result {
+                    Ok(Some(password)) => {
+                        let analyzer = HIBPRiskAnalyzer {};
+                        let compromised = analyzer.check_password(&password).await?;
+                        if compromised {
+                            println!("Password for {} is compromised!", value);
+                        } else {
+                            println!("Password for {} is safe.", value);
+                        }
                     }
-                },
-                None => {
-                    let passwords_result = storage.get_all();
-                    if let Ok(Some(passwords)) = passwords_result {
-                        let password_refs: Vec<&str> = passwords.iter().map(AsRef::as_ref).collect();
-                        let analyzer = HIBPRiskAnalyzer{};
-                        analyzer.check_all_passwords(password_refs).await?;
-                    } else {
-                        println!("No passwords to scan.");
-                    }
-                },
-            }
-        },
-        Commands::Generate { key , length} => {
-            match key {
-                Some(value) => {
-                    let password = generate_strong_password(length);
-                    match storage.set(value.clone(), password.clone()) {
-                        Ok(()) => println!("Password generated: {}, and saved under key '{}'", password, value),
-                        Err(e) => eprintln!("Failed to set key: {}", e),
-                    }
-                },
-                None => {
-                    let password = generate_strong_password(length);
-                    println!("Password generated: {}", password);
+                    Ok(None) => println!("Key not found."),
+                    Err(e) => eprintln!("Failed to get key: {}", e),
                 }
             }
-        }
+            None => {
+                let passwords_result = storage.get_all();
+                if let Ok(Some(passwords)) = passwords_result {
+                    let password_refs: Vec<&str> = passwords.iter().map(AsRef::as_ref).collect();
+                    let analyzer = HIBPRiskAnalyzer {};
+                    analyzer.check_all_passwords(password_refs).await?;
+                } else {
+                    println!("No passwords to scan.");
+                }
+            }
+        },
+        Commands::Generate { key, length } => match key {
+            Some(value) => {
+                let password = generate_strong_password(length);
+                match storage.set(value.clone(), password.clone()) {
+                    Ok(()) => println!(
+                        "Password generated: {}, and saved under key '{}'",
+                        password, value
+                    ),
+                    Err(e) => eprintln!("Failed to set key: {}", e),
+                }
+            }
+            None => {
+                let password = generate_strong_password(length);
+                println!("Password generated: {}", password);
+            }
+        },
     }
     Ok(())
 }

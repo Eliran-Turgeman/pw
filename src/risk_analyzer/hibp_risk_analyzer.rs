@@ -1,8 +1,7 @@
-use async_trait::async_trait;
-use sha1::{Sha1, Digest};
-use reqwest;
-use anyhow::Result;
 use super::risk_analyzer_trait::RiskAnalyzer;
+use anyhow::Result;
+use async_trait::async_trait;
+use sha1::{Digest, Sha1};
 
 pub struct HIBPRiskAnalyzer;
 

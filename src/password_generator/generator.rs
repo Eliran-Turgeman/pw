@@ -6,7 +6,10 @@ pub(crate) fn generate_strong_password(length: usize) -> String {
     let uppercase_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let digits = "0123456789";
     let special_chars = "!@#$%^&*()_-+=<>?";
-    let all_chars = format!("{}{}{}{}", lowercase_letters, uppercase_letters, digits, special_chars);
+    let all_chars = format!(
+        "{}{}{}{}",
+        lowercase_letters, uppercase_letters, digits, special_chars
+    );
 
     let mut rng = thread_rng();
 
@@ -18,7 +21,11 @@ pub(crate) fn generate_strong_password(length: usize) -> String {
     ];
 
     password.extend((password.len()..length).map(|_| {
-        *all_chars.chars().collect::<Vec<char>>().choose(&mut rng).unwrap()
+        *all_chars
+            .chars()
+            .collect::<Vec<char>>()
+            .choose(&mut rng)
+            .unwrap()
     }));
 
     password.shuffle(&mut rng);
@@ -52,7 +59,7 @@ mod tests {
     #[test]
     fn password_contains_digit() {
         let password = generate_strong_password(12);
-        assert!(password.chars().any(|c| c.is_digit(10)));
+        assert!(password.chars().any(|c| c.is_ascii_digit()));
     }
 
     #[test]
