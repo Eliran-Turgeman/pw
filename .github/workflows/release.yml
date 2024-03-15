@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   github-release:
-    runs-on: [linux, x64]
+    runs-on: [ubuntu-latest, windows-latest]
     permissions:
       contents: write
     steps:
