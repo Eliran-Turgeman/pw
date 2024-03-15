@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   github-release:
-    runs-on: [public, linux, x64]
+    runs-on: [linux, x64]
     environment: release
     permissions:
       contents: write
