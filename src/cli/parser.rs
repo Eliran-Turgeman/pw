@@ -4,6 +4,7 @@ use crate::risk_analyzer::risk_analyzer_trait::RiskAnalyzer;
 use crate::storage::file_storage::FileStorage;
 use crate::storage::storage_trait::Storage;
 use clap::{Parser, Subcommand};
+use dirs;
 
 /// Simple Password-Store CLI
 ///
@@ -80,11 +81,26 @@ enum Commands {
     },
 }
 
+fn init_storage() -> Result<FileStorage, Box<dyn std::error::Error>> {
+    let storage_path = dirs::home_dir();
+    match storage_path {
+        Some(value) => {
+            let path = format!("{}/.pw/store.json", value.display());
+            Ok(FileStorage::new(&path))
+        },
+        None => {
+            eprintln!("Could not find the home directory");
+            Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Could not find the home directory")))
+        }
+    }
+}
+
+
 #[tokio::main]
 pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let storage = FileStorage::new("C:\\Users\\elira\\store.json");
-
     let cli = Cli::parse();
+    let storage = init_storage()?;
+
     match cli.command {
         Commands::Set { key, value } => match storage.set(key, value) {
             Ok(()) => println!("Key set successfully"),

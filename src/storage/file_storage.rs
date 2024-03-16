@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
+use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
 pub struct FileStorage {
@@ -12,6 +13,26 @@ pub struct FileStorage {
 
 impl FileStorage {
     pub fn new(file_path: &str) -> Self {
+        let path = Path::new(file_path);
+
+        if let Some(parent) = path.parent() {
+            if !parent.exists() {
+                match fs::create_dir_all(parent) {
+                    Ok(_) => {},
+                    Err(e) => panic!("Failed to create directory: {:?}, error: {}", parent, e),
+                }
+            }
+        }
+
+        match File::create(file_path) {
+            Ok(mut file) => {
+                if let Err(e) = file.write_all(b"{}") {
+                    panic!("Failed to write to file: {:?}, error: {}", file_path, e);
+                }
+            },
+            Err(e) => panic!("Failed to create file: {:?}, error: {}", file_path, e),
+        }
+
         Self {
             file_path: file_path.to_string(),
         }
