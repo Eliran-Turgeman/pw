@@ -1,10 +1,11 @@
-use crate::password_generator::generator::generate_strong_password;
-use crate::risk_analyzer::hibp_risk_analyzer::HIBPRiskAnalyzer;
-use crate::risk_analyzer::risk_analyzer_trait::RiskAnalyzer;
 use crate::storage::file_storage::FileStorage;
-use crate::storage::storage_trait::Storage;
+use crate::cli::command_handlers::set::set_handler;
+use crate::cli::command_handlers::get::get_handler;
+use crate::cli::command_handlers::analyze::analyze_handler;
 use clap::{Parser, Subcommand};
 use dirs;
+
+use super::command_handlers::generate::generate_handler;
 
 /// Simple Password-Store CLI
 ///
@@ -102,59 +103,10 @@ pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let storage = init_storage()?;
 
     match cli.command {
-        Commands::Set { key, value } => match storage.set(key, value) {
-            Ok(()) => println!("Key set successfully"),
-            Err(e) => eprintln!("Failed to set key: {}", e),
-        },
-        Commands::Get { key } => match storage.get(key) {
-            Ok(Some(value)) => println!("Value: {}", value),
-            Ok(None) => println!("Key not found"),
-            Err(e) => eprintln!("Failed to get key: {}", e),
-        },
-        Commands::Analyze { key } => match key {
-            Some(value) => {
-                let password_result = storage.get(value.clone());
-                match password_result {
-                    Ok(Some(password)) => {
-                        let analyzer = HIBPRiskAnalyzer {};
-                        let compromised = analyzer.check_password(&password).await?;
-                        if compromised {
-                            println!("Password for {} is compromised!", value);
-                        } else {
-                            println!("Password for {} is safe.", value);
-                        }
-                    }
-                    Ok(None) => println!("Key not found."),
-                    Err(e) => eprintln!("Failed to get key: {}", e),
-                }
-            }
-            None => {
-                let passwords_result = storage.get_all();
-                if let Ok(Some(passwords)) = passwords_result {
-                    let password_refs: Vec<&str> = passwords.iter().map(AsRef::as_ref).collect();
-                    let analyzer = HIBPRiskAnalyzer {};
-                    analyzer.check_all_passwords(password_refs).await?;
-                } else {
-                    println!("No passwords to scan.");
-                }
-            }
-        },
-        Commands::Generate { key, length } => match key {
-            Some(value) => {
-                let password = generate_strong_password(length);
-                match storage.set(value.clone(), password.clone()) {
-                    Ok(()) => println!(
-                        "Password generated: {}, and saved under key '{}'",
-                        password, value
-                    ),
-                    Err(e) => eprintln!("Failed to set key: {}", e),
-                }
-            }
-            None => {
-                let password = generate_strong_password(length);
-                println!("Password generated: {}", password);
-            }
-        },
+        Commands::Set { key, value } => set_handler(&key, &value, &storage)?,
+        Commands::Get { key } => get_handler(&key, &storage)?,
+        Commands::Analyze { key } => analyze_handler(key, &storage).await?,
+        Commands::Generate { key, length } => generate_handler(key, length, &storage)?
     }
     Ok(())
 }
