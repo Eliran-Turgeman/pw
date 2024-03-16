@@ -1,9 +1,8 @@
-use crate::storage::file_storage::FileStorage;
-use crate::cli::command_handlers::set::set_handler;
-use crate::cli::command_handlers::get::get_handler;
 use crate::cli::command_handlers::analyze::analyze_handler;
+use crate::cli::command_handlers::get::get_handler;
+use crate::cli::command_handlers::set::set_handler;
+use crate::storage::file_storage::FileStorage;
 use clap::{Parser, Subcommand};
-use dirs;
 
 use super::command_handlers::generate::generate_handler;
 
@@ -88,14 +87,16 @@ fn init_storage() -> Result<FileStorage, Box<dyn std::error::Error>> {
         Some(value) => {
             let path = format!("{}/.pw/store.json", value.display());
             Ok(FileStorage::new(&path))
-        },
+        }
         None => {
             eprintln!("Could not find the home directory");
-            Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Could not find the home directory")))
+            Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Could not find the home directory",
+            )))
         }
     }
 }
-
 
 #[tokio::main]
 pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -106,7 +107,7 @@ pub(crate) async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Set { key, value } => set_handler(&key, &value, &storage)?,
         Commands::Get { key } => get_handler(&key, &storage)?,
         Commands::Analyze { key } => analyze_handler(key, &storage).await?,
-        Commands::Generate { key, length } => generate_handler(key, length, &storage)?
+        Commands::Generate { key, length } => generate_handler(key, length, &storage)?,
     }
     Ok(())
 }

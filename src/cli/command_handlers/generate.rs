@@ -1,4 +1,6 @@
-use crate::{password_generator::generator::generate_strong_password, storage::storage_trait::Storage};
+use crate::{
+    password_generator::generator::generate_strong_password, storage::storage_trait::Storage,
+};
 
 pub fn generate_handler(
     key: Option<String>,
@@ -8,13 +10,15 @@ pub fn generate_handler(
     let password = generate_strong_password(length);
     if let Some(value) = key {
         storage.set(value.clone(), password.clone())?;
-        println!("Password generated: {}, and saved under key '{}'", password, value);
+        println!(
+            "Password generated: {}, and saved under key '{}'",
+            password, value
+        );
     } else {
         println!("Password generated: {}", password);
     }
     Ok(())
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -33,10 +37,12 @@ mod tests {
             }
         }
         fn get(&self, _: String) -> Result<Option<String>, std::io::Error> {
-            unimplemented!()        }
-    
+            unimplemented!()
+        }
+
         fn get_all(&self) -> Result<Option<Vec<String>>, std::io::Error> {
-            unimplemented!()        }
+            unimplemented!()
+        }
     }
 
     #[test]

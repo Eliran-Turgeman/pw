@@ -14,7 +14,7 @@ pub struct FileStorage {
 impl FileStorage {
     pub fn new(file_path: &str) -> Self {
         let path = Path::new(file_path);
-    
+
         if let Some(parent) = path.parent() {
             if !parent.exists() {
                 match fs::create_dir_all(parent) {
@@ -23,12 +23,20 @@ impl FileStorage {
                 }
             }
         }
-    
-        let mut file = match OpenOptions::new().read(true).write(true).create(true).open(file_path) {
+
+        let mut file = match OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(file_path)
+        {
             Ok(file) => file,
-            Err(e) => panic!("Failed to open or create file: {:?}, error: {}", file_path, e),
+            Err(e) => panic!(
+                "Failed to open or create file: {:?}, error: {}",
+                file_path, e
+            ),
         };
-    
+
         match file.metadata() {
             Ok(metadata) => {
                 if metadata.len() == 0 {
@@ -39,7 +47,7 @@ impl FileStorage {
             }
             Err(e) => panic!("Failed to get file metadata: {:?}, error: {}", file_path, e),
         }
-    
+
         Self {
             file_path: file_path.to_string(),
         }

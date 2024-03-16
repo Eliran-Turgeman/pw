@@ -1,11 +1,15 @@
 use crate::storage::storage_trait::Storage;
 
-pub fn set_handler(key: &str, value: &str, storage: &dyn Storage) -> Result<(), Box<dyn std::error::Error>> {
-    storage.set(key.to_string(), value.to_string())
+pub fn set_handler(
+    key: &str,
+    value: &str,
+    storage: &dyn Storage,
+) -> Result<(), Box<dyn std::error::Error>> {
+    storage
+        .set(key.to_string(), value.to_string())
         .map_err(|e| e.into())
         .map(|_| println!("Key set successfully"))
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -24,10 +28,12 @@ mod tests {
             }
         }
         fn get(&self, _: String) -> Result<Option<String>, std::io::Error> {
-            unimplemented!()        }
-    
+            unimplemented!()
+        }
+
         fn get_all(&self) -> Result<Option<Vec<String>>, std::io::Error> {
-            unimplemented!()        }
+            unimplemented!()
+        }
     }
 
     #[test]

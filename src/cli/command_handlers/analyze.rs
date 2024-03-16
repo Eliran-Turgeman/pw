@@ -1,6 +1,6 @@
-use crate::storage::storage_trait::Storage;
 use crate::risk_analyzer::hibp_risk_analyzer::HIBPRiskAnalyzer;
 use crate::risk_analyzer::risk_analyzer_trait::RiskAnalyzer;
+use crate::storage::storage_trait::Storage;
 
 pub async fn analyze_handler(
     key: Option<String>,
